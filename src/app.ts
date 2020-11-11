@@ -1,5 +1,45 @@
-// autobind decorator
+interface Validateable {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
 
+// validation logic
+function validate({
+  value,
+  required,
+  minLength,
+  maxLength,
+  min,
+  max,
+}: Validateable) {
+  let isValid = true;
+  if (required) {
+    isValid = isValid && value.toString().trim().length !== 0;
+  }
+  if (
+    // != includes undefined & null !== null only includes null
+    minLength != null &&
+    typeof value === 'string'
+  ) {
+    isValid = isValid && value.length >= minLength;
+  }
+  if (maxLength != null && typeof value === 'string') {
+    isValid = isValid && value.length <= maxLength;
+  }
+  if (min != null && typeof value === 'number') {
+    isValid = isValid && value >= min;
+  }
+  if (max != null && typeof value === 'number') {
+    isValid = isValid && value <= max;
+  }
+  return isValid;
+}
+
+// autobind decorator
 function autobind(
   _target: any,
   _methodName: string,
@@ -55,10 +95,26 @@ class ProjectInput {
     const enteredDescription = this.descriptionInputElement.value;
     const enteredPeople = +this.peopleInputElement.value;
 
+    const titleValidatable: Validateable = {
+      value: enteredTitle,
+      required: true,
+    };
+    const descriptionValidatable: Validateable = {
+      value: enteredDescription,
+      required: true,
+      minLength: 5,
+    };
+    const peopleValidatable: Validateable = {
+      value: enteredPeople,
+      required: true,
+      min: 1,
+      max: 5,
+    };
+
     if (
-      enteredTitle.trim().length === 0 ||
-      enteredDescription.trim().length === 0 ||
-      enteredPeople <= 0
+      !validate(titleValidatable) ||
+      !validate(descriptionValidatable) ||
+      !validate(peopleValidatable)
     ) {
       alert('Please fill out all fields');
       return;
